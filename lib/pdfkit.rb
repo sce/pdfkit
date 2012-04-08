@@ -1,3 +1,5 @@
+require 'open3'
+
 require 'pdfkit/source'
 require 'pdfkit/pdfkit'
 require 'pdfkit/middleware'

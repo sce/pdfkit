@@ -61,14 +61,21 @@ class PDFKit
     args = command(path)
     invoke = args.join(' ')
 
-    result = IO.popen(invoke, "wb+") do |pdf|
-      pdf.puts(@source.to_s) if @source.html?
-      pdf.close_write
-      pdf.gets(nil)
+    result = Open3.popen3(invoke) do |stdin, stdout, stderr|
+      stdin.binmode
+      stdin.puts(@source.to_s) if @source.html?
+      stdin.close_write
+
+      errors = stderr.gets(nil)
+      raise "command failed: #{invoke}\n#{errors}" unless errors.to_s.empty?
+
+      stdout.binmode
+      stdout.gets(nil)
     end
+
     result = File.read(path) if path
 
-    raise "command failed: #{invoke}" if result.to_s.strip.empty?
+    raise "command failed: #{invoke}\nError: wkhtmltopdf returned empty PDF." if result.to_s.strip.empty?
     return result
   end
 
